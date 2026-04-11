@@ -5537,13 +5537,14 @@ function Library:CreateWindow(WindowInfo)
 
             if Icon then
                 TabIcon = New("ImageLabel", {
-                    Image = Icon.Url,
+                    Image = Icon.Url or Icon,  -- <-- МЕНЯЕМ ЗДЕСЬ
                     ImageColor3 = "AccentColor",
-                    ImageRectOffset = Icon.ImageRectOffset,
-                    ImageRectSize = Icon.ImageRectSize,
+                    ImageRectOffset = Icon.ImageRectOffset or Vector2.new(),
+                    ImageRectSize = Icon.ImageRectSize or Vector2.new(256,256),
                     ImageTransparency = 0.5,
                     Size = UDim2.fromScale(1, 1),
                     SizeConstraint = Enum.SizeConstraint.RelativeYY,
+                    Position = UDim2.fromOffset(4, 0),  -- <-- ДОБАВИЛИ позицию
                     Parent = TabButton,
                 })
             end

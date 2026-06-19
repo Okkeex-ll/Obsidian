@@ -56,7 +56,7 @@ local Templates = {
     TextBox = { BorderSizePixel = 0, FontFace = "Font", PlaceholderColor3 = function() local H, S, V = Library.Scheme.FontColor:ToHSV() return Color3.fromHSV(H, S, V / 2) end, Text = "", TextColor3 = "FontColor" },
     UIListLayout = { SortOrder = Enum.SortOrder.LayoutOrder },
     UIStroke = { ApplyStrokeMode = Enum.ApplyStrokeMode.Border },
-    Window = { Title = "No Title", Footer = "No Footer", Position = UDim2.fromOffset(6, 6), Size = UDim2.fromOffset(720, 600), IconSize = UDim2.fromOffset(30, 30), AutoShow = true, Center = true, Resizable = true, CornerRadius = 4, NotifySide = "Right", ShowCustomCursor = true, Font = Enum.Font.Code, ToggleKeybind = Enum.KeyCode.RightControl, MobileButtonsSide = "Left" },
+    Window = { Title = "No Title", Footer = "No Footer", Position = UDim2.fromOffset(6, 6), Size = UDim2.fromOffset(720, 600), IconSize = UDim2.fromOffset(30, 30), AutoShow = true, Center = true, Resizable = true, CornerRadius = 4, NotifySide = "Right", ShowCustomCursor = true, Font = Enum.Font.Code, ToggleKeybind = Enum.KeyCode.RightControl, MobileButtonsSide = "Left", NewUI = true, Watermark = { Enabled = false, Title = "OS Framework", ShowFPS = false, ShowPing = false, ShowTime = false } },
     Toggle = { Text = "Toggle", Default = false, Callback = function() end, Changed = function() end, Risky = false, Disabled = false, Visible = true },
     Input = { Text = "Input", Default = "", Finished = false, Numeric = false, ClearTextOnFocus = true, Placeholder = "", AllowEmpty = true, EmptyReset = "---", Callback = function() end, Changed = function() end, Disabled = false, Visible = true },
     Slider = { Text = "Slider", Default = 0, Min = 0, Max = 100, Rounding = 0, Prefix = "", Suffix = "", Callback = function() end, Changed = function() end, Disabled = false, Visible = true },
@@ -314,13 +314,8 @@ local function FillInstance(Table, Instance)
     local DPIOffset = DPIProperties["DPIOffset"] or Table["DPIOffset"] or {}
     for k, v in pairs(Table) do
         if k == "DPIExclude" or k == "DPIOffset" then continue
-        elseif ThemeProperties[k] then ThemeProperties[k] = nil end
-        
-        if k ~= "Text" and (Library.Scheme[v] or typeof(v) == "function") then 
-            ThemeProperties[k] = v 
-            Instance[k] = Library.Scheme[v] or v() 
-            continue 
-        end
+        elseif ThemeProperties[k] then ThemeProperties[k] = nil
+        elseif k ~= "Text" and (Library.Scheme[v] or typeof(v) == "function") then ThemeProperties[k] = v Instance[k] = Library.Scheme[v] or v() continue end
         if not DPIExclude[k] then
             if k == "Position" or k == "Size" or k:match("Padding") then DPIProperties[k] = v v = ApplyDPIScale(v, DPIOffset[k])
             elseif k == "TextSize" then DPIProperties[k] = v v = ApplyTextScale(v) end
@@ -471,62 +466,58 @@ function Library:AddDraggableMenu(Name)
     return Background, Container
 end
 
---// Watermark (Drawing API) \\--
+--// UI Watermark \--
 do
-    local WatermarkDrawing = { Background = nil, Outline = nil, Text = nil, Visible = false }
+    local WatermarkBackground = Library:MakeOutline(ScreenGui, Library.CornerRadius, 10)
+    WatermarkBackground.AutomaticSize = Enum.AutomaticSize.XY
+    WatermarkBackground.Position = UDim2.fromOffset(12, 12)
+    WatermarkBackground.Visible = false
+    Library:UpdateDPI(WatermarkBackground, { Position = false, Size = false })
 
-    if Drawing then
-        WatermarkDrawing.Background = Drawing.new("Square")
-        WatermarkDrawing.Background.Visible = false
-        WatermarkDrawing.Background.Color = Color3.fromRGB(15, 15, 15)
-        WatermarkDrawing.Background.Filled = true
-        WatermarkDrawing.Background.Thickness = 1
-        
-        WatermarkDrawing.Outline = Drawing.new("Square")
-        WatermarkDrawing.Outline.Visible = false
-        WatermarkDrawing.Outline.Color = Color3.fromRGB(40, 40, 40)
-        WatermarkDrawing.Outline.Filled = false
-        WatermarkDrawing.Outline.Thickness = 1
-        
-        WatermarkDrawing.Text = Drawing.new("Text")
-        WatermarkDrawing.Text.Visible = false
-        WatermarkDrawing.Text.Color = Color3.new(1, 1, 1)
-        WatermarkDrawing.Text.Outline = true
-        WatermarkDrawing.Text.Size = 16
-        WatermarkDrawing.Text.Font = 2
-    end
-
-    local function UpdateWatermarkPositions()
-        if not Drawing or not WatermarkDrawing.Visible then return end
-        local padding = 6
-        local bounds = WatermarkDrawing.Text.TextBounds
-        if typeof(bounds) ~= "Vector2" then bounds = Vector2.new(200, 16) end
-        local size = Vector2.new(bounds.X + (padding * 2), bounds.Y + (padding * 2))
-        local position = Vector2.new(workspace.CurrentCamera.ViewportSize.X - size.X - 16, 16)
-        
-        WatermarkDrawing.Background.Size = size
-        WatermarkDrawing.Background.Position = position
-        WatermarkDrawing.Outline.Size = size
-        WatermarkDrawing.Outline.Position = position
-        WatermarkDrawing.Text.Position = Vector2.new(position.X + padding, position.Y + padding)
-    end
-
-    function Library:SetWatermarkVisibility(Visible: boolean)
-        if not Drawing then return end
-        WatermarkDrawing.Visible = Visible
-        WatermarkDrawing.Background.Visible = Visible
-        WatermarkDrawing.Outline.Visible = Visible
-        WatermarkDrawing.Text.Visible = Visible
-        UpdateWatermarkPositions()
-    end
-
-    function Library:SetWatermark(Text: string)
-        if not Drawing then return end
-        WatermarkDrawing.Text.Text = Text
-        UpdateWatermarkPositions()
-    end
+    local WatermarkHolder = New("Frame", { BackgroundColor3 = "BackgroundColor", Position = UDim2.fromOffset(2, 2), Size = UDim2.new(1, -4, 1, -4), Parent = WatermarkBackground })
+    New("UICorner", { CornerRadius = UDim.new(0, Library.CornerRadius - 1), Parent = WatermarkHolder })
     
-    Library:GiveSignal(workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(UpdateWatermarkPositions))
+    local WatermarkLayout = New("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, VerticalAlignment = Enum.VerticalAlignment.Center, Padding = UDim.new(0, 6), Parent = WatermarkHolder })
+    New("UIPadding", { PaddingLeft = UDim.new(0, 8), PaddingRight = UDim.new(0, 8), PaddingTop = UDim.new(0, 4), PaddingBottom = UDim.new(0, 4), Parent = WatermarkHolder })
+
+    local WatermarkIcon = New("ImageLabel", { BackgroundTransparency = 1, Size = UDim2.fromOffset(16, 16), Visible = false, Parent = WatermarkHolder })
+    local WatermarkLabel = New("TextLabel", { BackgroundTransparency = 1, AutomaticSize = Enum.AutomaticSize.XY, Text = "", TextSize = 14, Parent = WatermarkHolder })
+
+    Library:MakeDraggable(WatermarkBackground, WatermarkHolder, true)
+
+    local WatermarkConfig = { Enabled = false, Title = "OS Framework", Icon = nil, ShowFPS = false, ShowPing = false, ShowTime = false }
+    local LastFPS, LastPing = 0, 0
+    
+    task.spawn(function()
+        local RunService = game:GetService("RunService")
+        local Stats = game:GetService("Stats")
+        while task.wait(0.5) do
+            LastFPS = math.floor(1 / RunService.RenderStepped:Wait())
+            pcall(function() LastPing = math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValue()) end)
+            if WatermarkConfig.Enabled then Library:UpdateWatermark() end
+        end
+    end)
+
+    function Library:UpdateWatermark()
+        local textParts = {}
+        if WatermarkConfig.Title and WatermarkConfig.Title ~= "" then table.insert(textParts, WatermarkConfig.Title) end
+        if WatermarkConfig.ShowFPS then table.insert(textParts, "FPS: " .. tostring(LastFPS)) end
+        if WatermarkConfig.ShowPing then table.insert(textParts, "Ping: " .. tostring(LastPing) .. "ms") end
+        if WatermarkConfig.ShowTime then table.insert(textParts, os.date("%H:%M:%S")) end
+        WatermarkLabel.Text = table.concat(textParts, " | ")
+        
+        if WatermarkConfig.Icon then
+            local iconData = Library:GetIcon(WatermarkConfig.Icon)
+            if iconData then WatermarkIcon.Image = iconData.Url WatermarkIcon.ImageRectOffset = iconData.ImageRectOffset WatermarkIcon.ImageRectSize = iconData.ImageRectSize else WatermarkIcon.Image = WatermarkConfig.Icon end
+            WatermarkIcon.Visible = true
+        else WatermarkIcon.Visible = false end
+        WatermarkBackground.Visible = WatermarkConfig.Enabled
+    end
+
+    function Library:SetWatermark(config)
+        for k, v in pairs(config) do WatermarkConfig[k] = v end
+        Library:UpdateWatermark()
+    end
 end
 
 --// Context Menu \\--
@@ -793,6 +784,30 @@ do
         ColorPicker:Display() if ParentObj.Addons then table.insert(ParentObj.Addons, ColorPicker) end Options[Idx] = ColorPicker
         return self
     end
+    function Funcs:AddSettings()
+        local ParentObj = self
+        local ToggleLabel = ParentObj.TextLabel
+        
+        local SettingsGear = New("ImageButton", { BackgroundTransparency = 1, Size = UDim2.fromOffset(16, 16), Image = Library:GetIcon("settings").Url, ImageRectOffset = Library:GetIcon("settings").ImageRectOffset, ImageRectSize = Library:GetIcon("settings").ImageRectSize, ImageColor3 = "FontColor", ImageTransparency = 0.5, Parent = ToggleLabel })
+        SettingsGear.MouseEnter:Connect(function() SettingsGear.ImageTransparency = 0 end)
+        SettingsGear.MouseLeave:Connect(function() SettingsGear.ImageTransparency = 0.5 end)
+        
+        local SetContainer = New("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, Visible = false, Parent = Library.RightPanelContainer })
+        New("UIListLayout", { Padding = UDim.new(0, 6), Parent = SetContainer })
+        New("UIPadding", { PaddingTop = UDim.new(0, 8), PaddingBottom = UDim.new(0, 8), PaddingLeft = UDim.new(0, 8), PaddingRight = UDim.new(0, 8), Parent = SetContainer })
+
+        SettingsGear.MouseButton1Click:Connect(function()
+            if Library.CurrentSettings == SetContainer then Library.RightPanel.Visible = false Library.CurrentSettings = nil return end
+            for _, c in pairs(Library.RightPanelContainer:GetChildren()) do if c:IsA("Frame") then c.Visible = false end end
+            SetContainer.Visible = true Library.RightPanel.Visible = true Library.RightPanelLabel.Text = ParentObj.Text .. " Settings" Library.CurrentSettings = SetContainer
+        end)
+        
+        local SubGroupbox = { Container = SetContainer, Elements = {}, DependencyBoxes = {}, Tab = Library.ActiveTab }
+        function SubGroupbox:Resize() end
+        setmetatable(SubGroupbox, BaseGroupbox)
+        return SubGroupbox
+    end
+
 
     BaseAddons.__index = Funcs
     BaseAddons.__namecall = function(_, Key, ...) return Funcs[Key](...) end
@@ -1248,6 +1263,8 @@ function Library:CreateWindow(WindowInfo)
     if typeof(WindowInfo.Font) == "EnumItem" then WindowInfo.Font = Font.fromEnum(WindowInfo.Font) end
     Library.CornerRadius = WindowInfo.CornerRadius Library:SetNotifySide(WindowInfo.NotifySide) Library.ShowCustomCursor = WindowInfo.ShowCustomCursor Library.Scheme.Font = WindowInfo.Font Library.ToggleKeybind = WindowInfo.ToggleKeybind
 
+    if WindowInfo.Watermark then Library:SetWatermark(WindowInfo.Watermark) end
+
     local MainFrame, SearchBox, CurrentTabInfo, CurrentTabLabel, CurrentTabDescription, ResizeButton, Tabs, Container
     do
         Library.KeybindFrame, Library.KeybindContainer = Library:AddDraggableMenu("Keybinds")
@@ -1256,11 +1273,7 @@ function Library:CreateWindow(WindowInfo)
 
         MainFrame = New("Frame", { BackgroundColor3 = function() return Library:GetBetterColor(Library.Scheme.BackgroundColor, -1) end, Name = "Main", Position = WindowInfo.Position, Size = WindowInfo.Size, Visible = false, Parent = ScreenGui, DPIExclude = { Position = true } })
         New("UICorner", { CornerRadius = UDim.new(0, WindowInfo.CornerRadius - 1), Parent = MainFrame })
-        do
-            local Lines = { { Position = UDim2.fromOffset(0, 48), Size = UDim2.new(1, 0, 0, 1) }, { AnchorPoint = Vector2.new(0, 1), Position = UDim2.new(0, 0, 1, -20), Size = UDim2.new(1, 0, 0, 1) } }
-            for _, Info in pairs(Lines) do Library:MakeLine(MainFrame, Info) end
-            Library:MakeOutline(MainFrame, WindowInfo.CornerRadius, 0)
-        end
+        Library:MakeOutline(MainFrame, WindowInfo.CornerRadius, 0)
         if WindowInfo.Center then MainFrame.Position = UDim2.new(0.5, -MainFrame.Size.X.Offset / 2, 0.5, -MainFrame.Size.Y.Offset / 2) end
 
         local TopBar = New("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 48), Parent = MainFrame })
@@ -1295,31 +1308,52 @@ function Library:CreateWindow(WindowInfo)
             Library:MakeResizable(MainFrame, ResizeButton, function() for _, Tab in pairs(Library.Tabs) do Tab:Resize(true) end end)
         end
 
-                --// Sidebar Frame For Tabs \--
-        local SidebarPanel = New("Frame", { 
-            BackgroundColor3 = function() return Library:GetBetterColor(Library.Scheme.BackgroundColor, -1) end, 
-            Position = UDim2.new(0, -162, 0, 0), 
-            Size = UDim2.new(0, 150, 1, 0), 
-            Parent = MainFrame 
-        })
-        Library:MakeOutline(SidebarPanel, WindowInfo.CornerRadius, 0)
-        New("UICorner", { CornerRadius = UDim.new(0, WindowInfo.CornerRadius - 1), Parent = SidebarPanel })
+        if WindowInfo.NewUI then
+            -- Make TopBar a detached frame
+            TopBar.Parent = ScreenGui
+            TopBar.BackgroundColor3 = Library.Scheme.BackgroundColor
+            TopBar.Position = UDim2.new(0, MainFrame.Position.X.Offset, 0, MainFrame.Position.Y.Offset - 60)
+            Library:MakeOutline(TopBar, WindowInfo.CornerRadius, 0)
+            New("UICorner", { CornerRadius = UDim.new(0, WindowInfo.CornerRadius - 1), Parent = TopBar })
+            
+            -- Sync dragging
+            Library:MakeDraggable(MainFrame, TopBar, false, true)
+            Library:MakeDraggable(MainFrame, MainFrame, false, true)
+            
+            MainFrame:GetPropertyChangedSignal("Position"):Connect(function()
+                TopBar.Position = UDim2.new(0, MainFrame.Position.X.Offset, 0, MainFrame.Position.Y.Offset - 60)
+            end)
+            
+            local SidebarPanel = New("Frame", { BackgroundColor3 = "BackgroundColor", Position = UDim2.new(0, -162, 0, 0), Size = UDim2.new(0, 150, 1, 0), Parent = MainFrame })
+            Library:MakeOutline(SidebarPanel, WindowInfo.CornerRadius, 0)
+            New("UICorner", { CornerRadius = UDim.new(0, WindowInfo.CornerRadius - 1), Parent = SidebarPanel })
 
-        Library:MakeDraggable(MainFrame, SidebarPanel, false, true)
+            Tabs = New("ScrollingFrame", { AutomaticCanvasSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1, CanvasSize = UDim2.fromScale(0, 0), Size = UDim2.fromScale(1, 1), ScrollBarThickness = 0, Parent = SidebarPanel })
+            New("UIListLayout", { Padding = UDim.new(0, 4), Parent = Tabs })
+            New("UIPadding", { PaddingBottom = UDim.new(0, 6), PaddingLeft = UDim.new(0, 6), PaddingRight = UDim.new(0, 6), PaddingTop = UDim.new(0, 6), Parent = Tabs })
 
-        Tabs = New("ScrollingFrame", { 
-            AutomaticCanvasSize = Enum.AutomaticSize.Y, 
-            BackgroundTransparency = 1, 
-            CanvasSize = UDim2.fromScale(0, 0), 
-            Size = UDim2.fromScale(1, 1), 
-            ScrollBarThickness = 0, 
-            Parent = SidebarPanel 
-        })
-        New("UIListLayout", { Padding = UDim.new(0, 4), Parent = Tabs })
-        New("UIPadding", { PaddingBottom = UDim.new(0, 6), PaddingLeft = UDim.new(0, 6), PaddingRight = UDim.new(0, 6), PaddingTop = UDim.new(0, 6), Parent = Tabs })
+            Library.RightPanel = New("Frame", { BackgroundColor3 = "BackgroundColor", Position = UDim2.new(1, 12, 0, 0), Size = UDim2.new(0, 200, 1, 0), Visible = false, Parent = MainFrame })
+            Library:MakeOutline(Library.RightPanel, WindowInfo.CornerRadius, 0)
+            New("UICorner", { CornerRadius = UDim.new(0, WindowInfo.CornerRadius - 1), Parent = Library.RightPanel })
 
-        --// Container For Groupboxes \\--
-        Container = New("Frame", { AnchorPoint = Vector2.new(1, 0), BackgroundTransparency = 1, Name = "Container", Position = UDim2.new(1, -12, 0, 58), Size = UDim2.new(1, -24, 1, -86), Parent = MainFrame })
+            Library.RightPanelLabel = New("TextLabel", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 34), Text = "Settings", TextSize = 14, TextXAlignment = Enum.TextXAlignment.Left, Parent = Library.RightPanel })
+            New("UIPadding", { PaddingLeft = UDim.new(0, 12), Parent = Library.RightPanelLabel })
+            Library:MakeLine(Library.RightPanel, { Position = UDim2.fromOffset(0, 34), Size = UDim2.new(1, 0, 0, 1) })
+
+            Library.RightPanelContainer = New("ScrollingFrame", { BackgroundTransparency = 1, Position = UDim2.new(0, 0, 0, 35), Size = UDim2.new(1, 0, 1, -35), ScrollBarThickness = 0, AutomaticCanvasSize = Enum.AutomaticSize.Y, CanvasSize = UDim2.fromScale(0, 0), Parent = Library.RightPanel })
+            
+            Container = New("Frame", { AnchorPoint = Vector2.new(1, 0), BackgroundTransparency = 1, Name = "Container", Position = UDim2.new(1, 0, 0, 0), Size = UDim2.new(1, 0, 1, -20), Parent = MainFrame })
+            New("UIPadding", { PaddingLeft = UDim.new(0, 6), PaddingRight = UDim.new(0, 6), PaddingTop = UDim.new(0, 6), Parent = Container })
+        else
+            -- Old Layout
+            Library:MakeLine(MainFrame, { Position = UDim2.fromOffset(0, 48), Size = UDim2.new(1, 0, 0, 1) })
+            Library:MakeLine(MainFrame, { Position = UDim2.fromScale(0.3, 0), Size = UDim2.new(0, 1, 1, -21) })
+            Library:MakeLine(MainFrame, { AnchorPoint = Vector2.new(0, 1), Position = UDim2.new(0, 0, 1, -20), Size = UDim2.new(1, 0, 0, 1) })
+            Tabs = New("ScrollingFrame", { AutomaticCanvasSize = Enum.AutomaticSize.Y, BackgroundColor3 = "BackgroundColor", CanvasSize = UDim2.fromScale(0, 0), Position = UDim2.fromOffset(0, 49), ScrollBarThickness = 0, Size = UDim2.new(0.3, 0, 1, -70), Parent = MainFrame })
+            New("UIListLayout", { Parent = Tabs })
+            Container = New("Frame", { AnchorPoint = Vector2.new(1, 0), BackgroundColor3 = function() return Library:GetBetterColor(Library.Scheme.BackgroundColor, 1) end, Name = "Container", Position = UDim2.new(1, 0, 0, 49), Size = UDim2.new(0.7, -1, 1, -70), Parent = MainFrame })
+            New("UIPadding", { PaddingBottom = UDim.new(0, 0), PaddingLeft = UDim.new(0, 6), PaddingRight = UDim.new(0, 6), PaddingTop = UDim.new(0, 0), Parent = Container })
+        end
     end
 
     local Window = {}
@@ -1478,9 +1512,10 @@ function Library:CreateWindow(WindowInfo)
         TabButton.MouseEnter:Connect(function() Tab:Hover(true) end) TabButton.MouseLeave:Connect(function() Tab:Hover(false) end)
         TabButton.MouseButton1Click:Connect(Tab.Show) Tab.Container = TabContainer setmetatable(Tab, BaseGroupbox) Library.Tabs[Name] = Tab return Tab
     end
-    function Library:Toggle(Value: boolean?)
+    function Library:Toggle(Value)
         if typeof(Value) == "boolean" then Library.Toggled = Value else Library.Toggled = not Library.Toggled end
         MainFrame.Visible = Library.Toggled ModalElement.Modal = Library.Toggled
+        if WindowInfo.NewUI and TopBar then TopBar.Visible = Library.Toggled end
         if Library.Toggled and not Library.IsMobile then
             local OldMouseIconEnabled = UserInputService.MouseIconEnabled
             pcall(function() RunService:UnbindFromRenderStep("ShowCursor") end)
@@ -1491,7 +1526,7 @@ function Library:CreateWindow(WindowInfo)
             end)
         elseif not Library.Toggled then
             TooltipLabel.Visible = false
-            for _, Option in pairs(Library.Options) do
+            for _, Option in pairs(Options) do
                 if Option.Type == "ColorPicker" then Option.ColorMenu:Close() Option.ContextMenu:Close() elseif Option.Type == "Dropdown" or Option.Type == "KeyPicker" then Option.Menu:Close() end
             end
         end
@@ -1508,7 +1543,7 @@ function Library:CreateWindow(WindowInfo)
         end
     end
     SearchBox:GetPropertyChangedSignal("Text"):Connect(function() Library:UpdateSearch(SearchBox.Text) end)
-    Library:GiveSignal(UserInputService.InputBegan:Connect(function(Input: InputObject)
+    Library:GiveSignal(UserInputService.InputBegan:Connect(function(Input)
         if UserInputService:GetFocusedTextBox() then return end
         if (typeof(Library.ToggleKeybind) == "table" and Library.ToggleKeybind.Type == "KeyPicker" and Input.KeyCode.Name == Library.ToggleKeybind.Value) or Input.KeyCode == Library.ToggleKeybind then Library.Toggle() end
     end))

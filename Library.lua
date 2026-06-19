@@ -1291,7 +1291,7 @@ function Library:CreateWindow(WindowInfo)
         end
 
         --// Sidebar Frame For Tabs \\--
-        local SidebarPanel = New("Frame", { BackgroundColor3 = "BackgroundColor", Position = UDim2.fromOffset(12, 58), Size = UDim2.new(0, 150, 1, -86), Parent = MainFrame })
+        local SidebarPanel = New("Frame", { BackgroundColor3 = "BackgroundColor", Position = UDim2.new(0, -162, 0, 0), Size = UDim2.new(0, 150, 1, 0), Parent = MainFrame })
         Library:MakeOutline(SidebarPanel, WindowInfo.CornerRadius)
         New("UICorner", { CornerRadius = UDim.new(0, WindowInfo.CornerRadius - 1), Parent = SidebarPanel })
 
@@ -1300,7 +1300,7 @@ function Library:CreateWindow(WindowInfo)
         New("UIPadding", { PaddingBottom = UDim.new(0, 6), PaddingLeft = UDim.new(0, 6), PaddingRight = UDim.new(0, 6), PaddingTop = UDim.new(0, 6), Parent = Tabs })
 
         --// Container For Groupboxes \\--
-        Container = New("Frame", { AnchorPoint = Vector2.new(1, 0), BackgroundTransparency = 1, Name = "Container", Position = UDim2.new(1, -12, 0, 58), Size = UDim2.new(1, -174, 1, -86), Parent = MainFrame })
+        Container = New("Frame", { AnchorPoint = Vector2.new(1, 0), BackgroundTransparency = 1, Name = "Container", Position = UDim2.new(1, -12, 0, 58), Size = UDim2.new(1, -24, 1, -86), Parent = MainFrame })
     end
 
     local Window = {}
@@ -1317,8 +1317,28 @@ function Library:CreateWindow(WindowInfo)
         do
             TabButton = New("TextButton", { BackgroundColor3 = "MainColor", BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 32), Text = "", Parent = Tabs })
             New("UICorner", { CornerRadius = UDim.new(0, 4), Parent = TabButton })
-            TabLabel = New("TextLabel", { BackgroundTransparency = 1, Position = UDim2.fromOffset(30, 0), Size = UDim2.new(1, -30, 1, 0), Text = Name, TextSize = 14, TextTransparency = 0.5, TextXAlignment = Enum.TextXAlignment.Left, Parent = TabButton })
-            if Icon then TabIcon = New("ImageLabel", { Image = Icon.Url, ImageColor3 = "AccentColor", ImageRectOffset = Icon.ImageRectOffset, ImageRectSize = Icon.ImageRectSize, ImageTransparency = 0.5, Size = UDim2.fromScale(1, 1), SizeConstraint = Enum.SizeConstraint.RelativeYY, Parent = TabButton }) end
+            
+            local hasText = (Name ~= nil and Name ~= "")
+            if hasText then
+                TabLabel = New("TextLabel", { BackgroundTransparency = 1, Position = UDim2.fromOffset(30, 0), Size = UDim2.new(1, -30, 1, 0), Text = Name, TextSize = 14, TextTransparency = 0.5, TextXAlignment = Enum.TextXAlignment.Left, Parent = TabButton })
+            else
+                TabLabel = New("TextLabel", { BackgroundTransparency = 1, Size = UDim2.new(0,0,0,0), Text = "", TextTransparency = 0.5, Visible = false, Parent = TabButton })
+            end
+            
+            if Icon then 
+                TabIcon = New("ImageLabel", { 
+                    Image = Icon.Url, 
+                    ImageColor3 = "AccentColor", 
+                    ImageRectOffset = Icon.ImageRectOffset, 
+                    ImageRectSize = Icon.ImageRectSize, 
+                    ImageTransparency = 0.5, 
+                    AnchorPoint = hasText and Vector2.new(0, 0) or Vector2.new(0.5, 0.5),
+                    Position = hasText and UDim2.new(0, 0, 0, 0) or UDim2.new(0.5, 0, 0.5, 0),
+                    Size = hasText and UDim2.fromScale(1, 1) or UDim2.fromScale(0.7, 0.7), 
+                    SizeConstraint = Enum.SizeConstraint.RelativeYY, 
+                    Parent = TabButton 
+                }) 
+            end
             TabContainer = New("Frame", { BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), Visible = false, Parent = Container })
             TabLeft = New("ScrollingFrame", { AutomaticCanvasSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1, CanvasSize = UDim2.fromScale(0, 0), ScrollBarThickness = 0, Parent = TabContainer })
             New("UIListLayout", { Padding = UDim.new(0, 6), Parent = TabLeft })
@@ -1360,7 +1380,7 @@ function Library:CreateWindow(WindowInfo)
         end
         function Tab:Show()
             if Library.ActiveTab then Library.ActiveTab:Hide() end
-            TweenService:Create(TabButton, Library.TweenInfo, { BackgroundTransparency = 0.9 }):Play()
+            TweenService:Create(TabButton, Library.TweenInfo, { BackgroundTransparency = 0.8 }):Play()
             TweenService:Create(TabLabel, Library.TweenInfo, { TextTransparency = 0 }):Play()
             if TabIcon then TweenService:Create(TabIcon, Library.TweenInfo, { ImageTransparency = 0 }):Play() end
             if Description then CurrentTabInfo.Visible = true SearchBox.Size = UDim2.fromScale(0.5, 1) CurrentTabLabel.Text = Name CurrentTabDescription.Text = Description end
@@ -1381,8 +1401,28 @@ function Library:CreateWindow(WindowInfo)
         do
             TabButton = New("TextButton", { BackgroundColor3 = "MainColor", BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 32), Text = "", Parent = Tabs })
             New("UICorner", { CornerRadius = UDim.new(0, 4), Parent = TabButton })
-            TabLabel = New("TextLabel", { BackgroundTransparency = 1, Position = UDim2.fromOffset(30, 0), Size = UDim2.new(1, -30, 1, 0), Text = Name, TextSize = 14, TextTransparency = 0.5, TextXAlignment = Enum.TextXAlignment.Left, Parent = TabButton })
-            if KeyIcon then TabIcon = New("ImageLabel", { Image = KeyIcon.Url, ImageColor3 = "AccentColor", ImageRectOffset = KeyIcon.ImageRectOffset, ImageRectSize = KeyIcon.ImageRectSize, ImageTransparency = 0.5, Size = UDim2.fromScale(1, 1), SizeConstraint = Enum.SizeConstraint.RelativeYY, Parent = TabButton }) end
+            
+            local hasText = (Name ~= nil and Name ~= "")
+            if hasText then
+                TabLabel = New("TextLabel", { BackgroundTransparency = 1, Position = UDim2.fromOffset(30, 0), Size = UDim2.new(1, -30, 1, 0), Text = Name, TextSize = 14, TextTransparency = 0.5, TextXAlignment = Enum.TextXAlignment.Left, Parent = TabButton })
+            else
+                TabLabel = New("TextLabel", { BackgroundTransparency = 1, Size = UDim2.new(0,0,0,0), Text = "", TextTransparency = 0.5, Visible = false, Parent = TabButton })
+            end
+            
+            if KeyIcon then 
+                TabIcon = New("ImageLabel", { 
+                    Image = KeyIcon.Url, 
+                    ImageColor3 = "AccentColor", 
+                    ImageRectOffset = KeyIcon.ImageRectOffset, 
+                    ImageRectSize = KeyIcon.ImageRectSize, 
+                    ImageTransparency = 0.5, 
+                    AnchorPoint = hasText and Vector2.new(0, 0) or Vector2.new(0.5, 0.5),
+                    Position = hasText and UDim2.new(0, 0, 0, 0) or UDim2.new(0.5, 0, 0.5, 0),
+                    Size = hasText and UDim2.fromScale(1, 1) or UDim2.fromScale(0.7, 0.7), 
+                    SizeConstraint = Enum.SizeConstraint.RelativeYY, 
+                    Parent = TabButton 
+                }) 
+            end
             TabContainer = New("ScrollingFrame", { AutomaticCanvasSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1, CanvasSize = UDim2.fromScale(0, 0), ScrollBarThickness = 0, Size = UDim2.fromScale(1, 1), Visible = false, Parent = Container })
             New("UIListLayout", { HorizontalAlignment = Enum.HorizontalAlignment.Center, Padding = UDim.new(0, 8), VerticalAlignment = Enum.VerticalAlignment.Center, Parent = TabContainer })
         end
@@ -1404,7 +1444,7 @@ function Library:CreateWindow(WindowInfo)
         end
         function Tab:Show()
             if Library.ActiveTab then Library.ActiveTab:Hide() end
-            TweenService:Create(TabButton, Library.TweenInfo, { BackgroundTransparency = 0.9 }):Play()
+            TweenService:Create(TabButton, Library.TweenInfo, { BackgroundTransparency = 0.8 }):Play()
             TweenService:Create(TabLabel, Library.TweenInfo, { TextTransparency = 0 }):Play()
             if TabIcon then TweenService:Create(TabIcon, Library.TweenInfo, { ImageTransparency = 0 }):Play() end
             TabContainer.Visible = true Library.ActiveTab = Tab

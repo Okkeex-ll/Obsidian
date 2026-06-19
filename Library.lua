@@ -5585,7 +5585,7 @@ function Library:CreateWindow(WindowInfo)
                     Parent = TabLeft,
                 })
 
-                TabLeft.Size = UDim2.new(0, math.floor(TabContainer.AbsoluteSize.X / 2) - 3, 1, 0)
+                TabLeft.Size = UDim2.new(0.5, -5, 1, 0)
                 Library:UpdateDPI(TabLeft, { Size = TabLeft.Size })
             end
 
@@ -5614,7 +5614,7 @@ function Library:CreateWindow(WindowInfo)
                     Parent = TabRight,
                 })
 
-                TabRight.Size = UDim2.new(0, math.floor(TabContainer.AbsoluteSize.X / 2) - 3, 1, 0)
+                TabRight.Size = UDim2.new(0.5, -5, 1, 0)
                 Library:UpdateDPI(TabRight, { Size = TabRight.Size })
             end
 
@@ -5756,7 +5756,7 @@ function Library:CreateWindow(WindowInfo)
             local Offset = WarningBox.Visible and WarningBox.AbsoluteSize.Y + 6 or 0
             for _, Side in pairs(Tab.Sides) do
                 Side.Position = UDim2.new(Side.Position.X.Scale, 0, 0, Offset)
-                Side.Size = UDim2.new(0, math.floor(TabContainer.AbsoluteSize.X / 2) - 3, 1, -Offset)
+                Side.Size = UDim2.new(0.5, -5, 1, -Offset)
                 Library:UpdateDPI(Side, {
                     Position = Side.Position,
                     Size = Side.Size,
@@ -6076,12 +6076,10 @@ function Library:CreateWindow(WindowInfo)
                 }):Play()
             end
 
-            if Description then
-                CurrentTabInfo.Visible = true
-                -- SearchBox.Size = UDim2.fromScale(0.5, 1)
-                CurrentTabLabel.Text = Name
-                CurrentTabDescription.Text = Description
-            end
+            CurrentTabInfo.Visible = true
+            CurrentTabLabel.Text = Name
+            CurrentTabDescription.Text = Description or ""
+            CurrentTabDescription.Visible = not not Description
 
             TabContainer.Visible = true
 

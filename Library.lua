@@ -1290,12 +1290,39 @@ function Library:CreateWindow(WindowInfo)
             Library:MakeResizable(MainFrame, ResizeButton, function() for _, Tab in pairs(Library.Tabs) do Tab:Resize(true) end end)
         end
 
-        --// Sidebar Frame For Tabs \\--
-        local SidebarPanel = New("Frame", { BackgroundColor3 = "BackgroundColor", Position = UDim2.new(0, -162, 0, 0), Size = UDim2.new(0, 150, 1, 0), Parent = MainFrame })
-        Library:MakeOutline(SidebarPanel, WindowInfo.CornerRadius)
+                --// Sidebar Frame For Tabs \--
+        local SidebarPanel = New("Frame", { 
+            BackgroundColor3 = function() return Library:GetBetterColor(Library.Scheme.BackgroundColor, -1) end, 
+            Position = UDim2.new(0, -162, 0, 0), 
+            Size = UDim2.new(0, 150, 1, 0), 
+            Parent = MainFrame 
+        })
+        Library:MakeOutline(SidebarPanel, WindowInfo.CornerRadius, 0)
         New("UICorner", { CornerRadius = UDim.new(0, WindowInfo.CornerRadius - 1), Parent = SidebarPanel })
 
-        Tabs = New("ScrollingFrame", { AutomaticCanvasSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1, CanvasSize = UDim2.fromScale(0, 0), Size = UDim2.new(1, 0, 1, 0), ScrollBarThickness = 0, Parent = SidebarPanel })
+        Library:MakeLine(SidebarPanel, { Position = UDim2.fromOffset(0, 48), Size = UDim2.new(1, 0, 0, 1) })
+        New("TextLabel", {
+            BackgroundTransparency = 1,
+            Position = UDim2.new(0, 12, 0, 0),
+            Size = UDim2.new(1, -12, 0, 48),
+            Text = "Menu",
+            TextSize = 16,
+            TextColor3 = "FontColor",
+            TextTransparency = 0.3,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            Parent = SidebarPanel
+        })
+        Library:MakeDraggable(MainFrame, SidebarPanel, false, true)
+
+        Tabs = New("ScrollingFrame", { 
+            AutomaticCanvasSize = Enum.AutomaticSize.Y, 
+            BackgroundTransparency = 1, 
+            CanvasSize = UDim2.fromScale(0, 0), 
+            Position = UDim2.new(0, 0, 0, 49),
+            Size = UDim2.new(1, 0, 1, -49), 
+            ScrollBarThickness = 0, 
+            Parent = SidebarPanel 
+        })
         New("UIListLayout", { Padding = UDim.new(0, 4), Parent = Tabs })
         New("UIPadding", { PaddingBottom = UDim.new(0, 6), PaddingLeft = UDim.new(0, 6), PaddingRight = UDim.new(0, 6), PaddingTop = UDim.new(0, 6), Parent = Tabs })
 
@@ -1380,7 +1407,7 @@ function Library:CreateWindow(WindowInfo)
         end
         function Tab:Show()
             if Library.ActiveTab then Library.ActiveTab:Hide() end
-            TweenService:Create(TabButton, Library.TweenInfo, { BackgroundTransparency = 0.8 }):Play()
+            TweenService:Create(TabButton, Library.TweenInfo, { BackgroundTransparency = 0 }):Play()
             TweenService:Create(TabLabel, Library.TweenInfo, { TextTransparency = 0 }):Play()
             if TabIcon then TweenService:Create(TabIcon, Library.TweenInfo, { ImageTransparency = 0 }):Play() end
             if Description then CurrentTabInfo.Visible = true SearchBox.Size = UDim2.fromScale(0.5, 1) CurrentTabLabel.Text = Name CurrentTabDescription.Text = Description end
@@ -1444,7 +1471,7 @@ function Library:CreateWindow(WindowInfo)
         end
         function Tab:Show()
             if Library.ActiveTab then Library.ActiveTab:Hide() end
-            TweenService:Create(TabButton, Library.TweenInfo, { BackgroundTransparency = 0.8 }):Play()
+            TweenService:Create(TabButton, Library.TweenInfo, { BackgroundTransparency = 0 }):Play()
             TweenService:Create(TabLabel, Library.TweenInfo, { TextTransparency = 0 }):Play()
             if TabIcon then TweenService:Create(TabIcon, Library.TweenInfo, { ImageTransparency = 0 }):Play() end
             TabContainer.Visible = true Library.ActiveTab = Tab

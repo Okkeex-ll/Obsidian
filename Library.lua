@@ -4874,6 +4874,18 @@ do
         return DepGroupbox
     end
 
+    function Funcs:AddColorPicker(Idx, Info)
+        local Title = Info.Title or Info.Text or "Color Picker"
+        local Label = self:AddLabel(Title)
+        return Label:AddColorPicker(Idx, Info)
+    end
+
+    function Funcs:AddKeyPicker(Idx, Info)
+        local Text = Info.Text or Info.Title or "Key Picker"
+        local Label = self:AddLabel(Text)
+        return Label:AddKeyPicker(Idx, Info)
+    end
+
     BaseGroupbox.__index = Funcs
     BaseGroupbox.__namecall = function(_, Key, ...)
         return Funcs[Key](...)

@@ -783,12 +783,18 @@ end
 
 function Library:UpdateColorsUsingRegistry()
     for Instance, Properties in pairs(Library.Registry) do
+        if not (Instance and typeof(Instance) == "Instance" and Instance.Parent) then
+            Library.Registry[Instance] = nil
+            continue
+        end
         for Property, ColorIdx in pairs(Properties) do
-            if typeof(ColorIdx) == "string" then
-                Instance[Property] = Library.Scheme[ColorIdx]
-            elseif typeof(ColorIdx) == "function" then
-                Instance[Property] = ColorIdx()
-            end
+            pcall(function()
+                if typeof(ColorIdx) == "string" then
+                    Instance[Property] = Library.Scheme[ColorIdx] or Color3.new(1, 1, 1)
+                elseif typeof(ColorIdx) == "function" then
+                    Instance[Property] = ColorIdx()
+                end
+            end)
         end
     end
 end
@@ -808,14 +814,20 @@ function Library:SetDPIScale(DPIScale: number)
     Library.MinSize *= Library.DPIScale
 
     for Instance, Properties in pairs(Library.DPIRegistry) do
+        if not (Instance and typeof(Instance) == "Instance" and Instance.Parent) then
+            Library.DPIRegistry[Instance] = nil
+            continue
+        end
         for Property, Value in pairs(Properties) do
-            if Property == "DPIExclude" or Property == "DPIOffset" then
-                continue
-            elseif Property == "TextSize" then
-                Instance[Property] = ApplyTextScale(Value)
-            else
-                Instance[Property] = ApplyDPIScale(Value, Properties["DPIOffset"][Property])
-            end
+            pcall(function()
+                if Property == "DPIExclude" or Property == "DPIOffset" then
+                    return
+                elseif Property == "TextSize" then
+                    Instance[Property] = ApplyTextScale(Value)
+                else
+                    Instance[Property] = ApplyDPIScale(Value, Properties["DPIOffset"][Property])
+                end
+            end)
         end
     end
 
@@ -901,13 +913,27 @@ local function FillInstance(Table: { [string]: any }, Instance: GuiObject)
     for k, v in pairs(Table) do
         if k == "DPIExclude" or k == "DPIOffset" then
             continue
-        elseif k ~= "Text" and (Library.Scheme[v] or typeof(v) == "function") then
-            -- me when Red in dropdowns break things (temp fix - or perm idk if deivid will do something about this)
+        end
+
+        -- Приоритетная обработка ключей схемы
+        if k ~= "Text" and (Library.Scheme[v] or typeof(v) == "function") then
             ThemeProperties[k] = v
-            Instance[k] = Library.Scheme[v] or v()
+            pcall(function()
+                Instance[k] = Library.Scheme[v] or v()
+            end)
             continue
         elseif ThemeProperties[k] then
             ThemeProperties[k] = nil
+        end
+
+        -- Пуленепробиваемая защита от падений при присвоении любых цветов
+        if typeof(v) == "string" and (k:match("Color3") or k == "Color") then
+            local Success, HexColor = pcall(Color3.fromHex, v)
+            if Success and typeof(HexColor) == "Color3" then
+                v = HexColor
+            else
+                v = Library.Scheme.FontColor or Color3.new(1, 1, 1)
+            end
         end
 
         if not DPIExclude[k] then
@@ -920,7 +946,9 @@ local function FillInstance(Table: { [string]: any }, Instance: GuiObject)
             end
         end
 
-        Instance[k] = v
+        pcall(function()
+            Instance[k] = v
+        end)
     end
 
     if GetTableSize(ThemeProperties) > 0 then

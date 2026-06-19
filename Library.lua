@@ -439,7 +439,7 @@ end
 
 function Library:AddDraggableButton(Text, Func)
     local Table = {}
-    local Button = New("TextButton", { BackgroundColor3 = "BackgroundColor", Position = UDim2.fromOffset(6, 6), TextSize = 16, ZIndex = 10, Parent = ScreenGui, DPIExclude = { Position = true } })
+    local Button = New("TextButton", { BackgroundColor3 = function() return Library:GetBetterColor(Library.Scheme.BackgroundColor, 0) end, Position = UDim2.fromOffset(6, 6), TextSize = 16, ZIndex = 10, Parent = ScreenGui, DPIExclude = { Position = true } })
     New("UICorner", { CornerRadius = UDim.new(0, Library.CornerRadius - 1), Parent = Button })
     Library:MakeOutline(Button, Library.CornerRadius, 9)
     Table.Button = Button
@@ -459,7 +459,7 @@ function Library:AddDraggableMenu(Name)
     Background.AutomaticSize = Enum.AutomaticSize.Y
     Background.Position = UDim2.fromOffset(6, 6) Background.Size = UDim2.fromOffset(0, 0)
     Library:UpdateDPI(Background, { Position = false, Size = false })
-    local Holder = New("Frame", { BackgroundColor3 = "BackgroundColor", Position = UDim2.fromOffset(2, 2), Size = UDim2.new(1, -4, 1, -4), Parent = Background })
+    local Holder = New("Frame", { BackgroundColor3 = function() return Library:GetBetterColor(Library.Scheme.BackgroundColor, 0) end, Position = UDim2.fromOffset(2, 2), Size = UDim2.new(1, -4, 1, -4), Parent = Background })
     New("UICorner", { CornerRadius = UDim.new(0, Library.CornerRadius - 1), Parent = Holder })
     Library:MakeLine(Holder, { Position = UDim2.fromOffset(0, 34), Size = UDim2.new(1, 0, 0, 1) })
     local Label = New("TextLabel", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 34), Text = Name, TextSize = 15, TextXAlignment = Enum.TextXAlignment.Left, Parent = Holder })
@@ -474,7 +474,7 @@ end
 --// UI Watermark \--
 do
     local WatermarkHolder = New("Frame", {
-        BackgroundColor3 = "BackgroundColor",
+        BackgroundColor3 = function() return Library:GetBetterColor(Library.Scheme.BackgroundColor, 0) end,
         Position = UDim2.fromOffset(12, 12),
         AutomaticSize = Enum.AutomaticSize.XY,
         Visible = false,
@@ -531,9 +531,9 @@ local CurrentMenu
 function Library:AddContextMenu(Holder, Size, Offset, List, ActiveCallback)
     local Menu
     if List then
-        Menu = New("ScrollingFrame", { AutomaticCanvasSize = List == 2 and Enum.AutomaticSize.Y or Enum.AutomaticSize.None, AutomaticSize = List == 1 and Enum.AutomaticSize.Y or Enum.AutomaticSize.None, BackgroundColor3 = "BackgroundColor", BorderColor3 = "OutlineColor", BorderSizePixel = 1, BottomImage = "rbxasset://textures/ui/Scroll/scroll-middle.png", CanvasSize = UDim2.fromOffset(0, 0), ScrollBarImageColor3 = "OutlineColor", ScrollBarThickness = List == 2 and 2 or 0, Size = typeof(Size) == "function" and Size() or Size, TopImage = "rbxasset://textures/ui/Scroll/scroll-middle.png", Visible = false, ZIndex = 10, Parent = ScreenGui, DPIExclude = { Position = true } })
+        Menu = New("ScrollingFrame", { AutomaticCanvasSize = List == 2 and Enum.AutomaticSize.Y or Enum.AutomaticSize.None, AutomaticSize = List == 1 and Enum.AutomaticSize.Y or Enum.AutomaticSize.None, BackgroundColor3 = function() return Library:GetBetterColor(Library.Scheme.BackgroundColor, 0) end, BorderColor3 = "OutlineColor", BorderSizePixel = 1, BottomImage = "rbxasset://textures/ui/Scroll/scroll-middle.png", CanvasSize = UDim2.fromOffset(0, 0), ScrollBarImageColor3 = "OutlineColor", ScrollBarThickness = List == 2 and 2 or 0, Size = typeof(Size) == "function" and Size() or Size, TopImage = "rbxasset://textures/ui/Scroll/scroll-middle.png", Visible = false, ZIndex = 10, Parent = ScreenGui, DPIExclude = { Position = true } })
     else
-        Menu = New("Frame", { BackgroundColor3 = "BackgroundColor", BorderColor3 = "OutlineColor", BorderSizePixel = 1, Size = typeof(Size) == "function" and Size() or Size, Visible = false, ZIndex = 10, Parent = ScreenGui, DPIExclude = { Position = true } })
+        Menu = New("Frame", { BackgroundColor3 = function() return Library:GetBetterColor(Library.Scheme.BackgroundColor, 0) end, BorderColor3 = "OutlineColor", BorderSizePixel = 1, Size = typeof(Size) == "function" and Size() or Size, Visible = false, ZIndex = 10, Parent = ScreenGui, DPIExclude = { Position = true } })
     end
     local Table = { Active = false, Holder = Holder, Menu = Menu, List = nil, Signal = nil, Size = Size }
     if List then Table.List = New("UIListLayout", { Parent = Menu }) end
@@ -564,7 +564,7 @@ Library:GiveSignal(UserInputService.InputBegan:Connect(function(Input)
 end))
 
 --// Tooltip \\--
-local TooltipLabel = New("TextLabel", { BackgroundColor3 = "BackgroundColor", BorderColor3 = "OutlineColor", BorderSizePixel = 1, TextSize = 14, TextWrapped = true, Visible = false, ZIndex = 20, Parent = ScreenGui })
+local TooltipLabel = New("TextLabel", { BackgroundColor3 = function() return Library:GetBetterColor(Library.Scheme.BackgroundColor, 0) end, BorderColor3 = "OutlineColor", BorderSizePixel = 1, TextSize = 14, TextWrapped = true, Visible = false, ZIndex = 20, Parent = ScreenGui })
 TooltipLabel:GetPropertyChangedSignal("AbsolutePosition"):Connect(function()
     local X, Y = Library:GetTextBounds(TooltipLabel.Text, TooltipLabel.FontFace, TooltipLabel.TextSize, workspace.CurrentCamera.ViewportSize.X - TooltipLabel.AbsolutePosition.X - 4)
     TooltipLabel.Size = UDim2.fromOffset(X + 8 * Library.DPIScale, Y + 4 * Library.DPIScale)
@@ -938,7 +938,7 @@ do
         function Toggle:Display()
             if Library.Unloaded then return end
             CheckboxStroke.Transparency = Toggle.Disabled and 0.5 or 0
-            if Toggle.Disabled then Label.TextTransparency = 0.8 CheckImage.ImageTransparency = Toggle.Value and 0.8 or 1 Checkbox.BackgroundColor3 = Library.Scheme.BackgroundColor Library.Registry[Checkbox].BackgroundColor3 = "BackgroundColor" return end
+            if Toggle.Disabled then Label.TextTransparency = 0.8 CheckImage.ImageTransparency = Toggle.Value and 0.8 or 1 Checkbox.BackgroundColor3 = Library.Scheme.BackgroundColor Library.Registry[Checkbox].BackgroundColor3 = function() return Library:GetBetterColor(Library.Scheme.BackgroundColor, 0) end return end
             TweenService:Create(Label, Library.TweenInfo, { TextTransparency = Toggle.Value and 0 or 0.4 }):Play()
             TweenService:Create(CheckImage, Library.TweenInfo, { ImageTransparency = Toggle.Value and 0 or 1 }):Play()
             Checkbox.BackgroundColor3 = Library.Scheme.MainColor Library.Registry[Checkbox].BackgroundColor3 = "MainColor"
@@ -1195,7 +1195,7 @@ do
     function Funcs:AddDependencyGroupbox()
         local Groupbox = self local Tab = Groupbox.Tab local BoxHolder = Groupbox.BoxHolder
         local Background = Library:MakeOutline(BoxHolder, Library.CornerRadius) Background.Size = UDim2.fromScale(1, 0) Background.Visible = false Library:UpdateDPI(Background, { Size = false })
-        local DepGroupboxContainer = New("Frame", { BackgroundColor3 = "BackgroundColor", Position = UDim2.fromOffset(2, 2), Size = UDim2.new(1, -4, 1, -4), Parent = Background })
+        local DepGroupboxContainer = New("Frame", { BackgroundColor3 = function() return Library:GetBetterColor(Library.Scheme.BackgroundColor, 0) end, Position = UDim2.fromOffset(2, 2), Size = UDim2.new(1, -4, 1, -4), Parent = Background })
         New("UICorner", { CornerRadius = UDim.new(0, Library.CornerRadius - 1), Parent = DepGroupboxContainer })
         local DepGroupboxList = New("UIListLayout", { Padding = UDim.new(0, 8), Parent = DepGroupboxContainer })
         New("UIPadding", { PaddingBottom = UDim.new(0, 7), PaddingLeft = UDim.new(0, 7), PaddingRight = UDim.new(0, 7), PaddingTop = UDim.new(0, 7), Parent = DepGroupboxContainer })
@@ -1254,7 +1254,7 @@ function Library:Notify(...)
     end
     Data:Resize()
     local TimerHolder = New("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 7), Visible = (Data.Persist ~= true and typeof(Data.Time) ~= "Instance") or typeof(Data.Steps) == "number", Parent = Holder })
-    local TimerBar = New("Frame", { BackgroundColor3 = "BackgroundColor", BorderColor3 = "OutlineColor", BorderSizePixel = 1, Position = UDim2.fromOffset(0, 3), Size = UDim2.new(1, 0, 0, 2), Parent = TimerHolder })
+    local TimerBar = New("Frame", { BackgroundColor3 = function() return Library:GetBetterColor(Library.Scheme.BackgroundColor, 0) end, BorderColor3 = "OutlineColor", BorderSizePixel = 1, Position = UDim2.fromOffset(0, 3), Size = UDim2.new(1, 0, 0, 2), Parent = TimerHolder })
     TimerFill = New("Frame", { BackgroundColor3 = "AccentColor", Size = UDim2.fromScale(1, 1), Parent = TimerBar })
     if typeof(Data.Time) == "Instance" then TimerFill.Size = UDim2.fromScale(0, 1) end
     if Data.SoundId then
@@ -1327,7 +1327,7 @@ function Library:CreateWindow(WindowInfo)
 
         if WindowInfo.NewUI then
             -- TopBar styling inside MainFrame but floating above!
-            TopBar.BackgroundColor3 = Library.Scheme.BackgroundColor; Library.Registry[TopBar] = { BackgroundColor3 = "BackgroundColor" }
+            TopBar.BackgroundColor3 = Library.Scheme.BackgroundColor; Library.Registry[TopBar] = { BackgroundColor3 = function() return Library:GetBetterColor(Library.Scheme.BackgroundColor, 0) end }
             TopBar.BackgroundTransparency = 0
             TopBar.Position = UDim2.new(0, -162, 0, -58)
             TopBar.Size = UDim2.new(1, 162, 0, 48)
@@ -1338,7 +1338,7 @@ function Library:CreateWindow(WindowInfo)
             RightWrapper.Position = UDim2.new(1, -8, 0.5, 0)
             RightWrapper.AnchorPoint = Vector2.new(1, 0.5)
             
-            local SidebarPanel = New("Frame", { BackgroundColor3 = "BackgroundColor", Position = UDim2.new(0, -160, 0, 0), Size = UDim2.new(0, 150, 1, 0), Parent = MainFrame })
+            local SidebarPanel = New("Frame", { BackgroundColor3 = function() return Library:GetBetterColor(Library.Scheme.BackgroundColor, 0) end, Position = UDim2.new(0, -160, 0, 0), Size = UDim2.new(0, 150, 1, 0), Parent = MainFrame })
             Library:MakeOutline(SidebarPanel, WindowInfo.CornerRadius, 0)
             New("UICorner", { CornerRadius = UDim.new(0, WindowInfo.CornerRadius - 1), Parent = SidebarPanel })
 
@@ -1346,7 +1346,7 @@ function Library:CreateWindow(WindowInfo)
             New("UIListLayout", { Padding = UDim.new(0, 4), Parent = Tabs })
             New("UIPadding", { PaddingBottom = UDim.new(0, 6), PaddingLeft = UDim.new(0, 6), PaddingRight = UDim.new(0, 6), PaddingTop = UDim.new(0, 6), Parent = Tabs })
 
-            Library.RightPanel = New("Frame", { BackgroundColor3 = "BackgroundColor", Position = UDim2.new(1, 10, 0, -50), Size = UDim2.new(0, 200, 1, 50), Visible = false, Parent = MainFrame })
+            Library.RightPanel = New("Frame", { BackgroundColor3 = function() return Library:GetBetterColor(Library.Scheme.BackgroundColor, 0) end, Position = UDim2.new(1, 10, 0, -50), Size = UDim2.new(0, 200, 1, 50), Visible = false, Parent = MainFrame })
             Library:MakeOutline(Library.RightPanel, WindowInfo.CornerRadius, 0)
             New("UICorner", { CornerRadius = UDim.new(0, WindowInfo.CornerRadius - 1), Parent = Library.RightPanel })
 
@@ -1364,7 +1364,7 @@ function Library:CreateWindow(WindowInfo)
             Library:MakeLine(MainFrame, { Position = UDim2.fromOffset(0, 48), Size = UDim2.new(1, 0, 0, 1) })
             Library:MakeLine(MainFrame, { Position = UDim2.fromScale(0.3, 0), Size = UDim2.new(0, 1, 1, -21) })
             Library:MakeLine(MainFrame, { AnchorPoint = Vector2.new(0, 1), Position = UDim2.new(0, 0, 1, -20), Size = UDim2.new(1, 0, 0, 1) })
-            Tabs = New("ScrollingFrame", { AutomaticCanvasSize = Enum.AutomaticSize.Y, BackgroundColor3 = "BackgroundColor", CanvasSize = UDim2.fromScale(0, 0), Position = UDim2.fromOffset(0, 49), ScrollBarThickness = 0, Size = UDim2.new(0.3, 0, 1, -70), Parent = MainFrame })
+            Tabs = New("ScrollingFrame", { AutomaticCanvasSize = Enum.AutomaticSize.Y, BackgroundColor3 = function() return Library:GetBetterColor(Library.Scheme.BackgroundColor, 0) end, CanvasSize = UDim2.fromScale(0, 0), Position = UDim2.fromOffset(0, 49), ScrollBarThickness = 0, Size = UDim2.new(0.3, 0, 1, -70), Parent = MainFrame })
             New("UIListLayout", { Parent = Tabs })
             Container = New("Frame", { AnchorPoint = Vector2.new(1, 0), BackgroundColor3 = function() return Library:GetBetterColor(Library.Scheme.BackgroundColor, 1) end, Name = "Container", Position = UDim2.new(1, 0, 0, 49), Size = UDim2.new(0.7, -1, 1, -70), Parent = MainFrame })
             New("UIPadding", { PaddingBottom = UDim.new(0, 0), PaddingLeft = UDim.new(0, 6), PaddingRight = UDim.new(0, 6), PaddingTop = UDim.new(0, 0), Parent = Container })
@@ -1426,7 +1426,7 @@ function Library:CreateWindow(WindowInfo)
             local Background = Library:MakeOutline(BoxHolder, WindowInfo.CornerRadius) Background.Size = UDim2.fromScale(1, 0) Library:UpdateDPI(Background, { Size = false })
             local GroupboxHolder, GroupboxLabel, GroupboxContainer, GroupboxList
             do
-                GroupboxHolder = New("Frame", { BackgroundColor3 = "BackgroundColor", Position = UDim2.fromOffset(2, 2), Size = UDim2.new(1, -4, 1, -4), Parent = Background })
+                GroupboxHolder = New("Frame", { BackgroundColor3 = function() return Library:GetBetterColor(Library.Scheme.BackgroundColor, 0) end, Position = UDim2.fromOffset(2, 2), Size = UDim2.new(1, -4, 1, -4), Parent = Background })
                 New("UICorner", { CornerRadius = UDim.new(0, WindowInfo.CornerRadius - 1), Parent = GroupboxHolder })
                 Library:MakeLine(GroupboxHolder, { Position = UDim2.fromOffset(0, 34), Size = UDim2.new(1, 0, 0, 1) })
                 GroupboxLabel = New("TextLabel", { BackgroundTransparency = 1, Position = UDim2.fromOffset(0, 0), Size = UDim2.new(1, 0, 0, 34), Text = Info.Name, TextSize = 15, TextXAlignment = Enum.TextXAlignment.Left, Parent = GroupboxHolder })

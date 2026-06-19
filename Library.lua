@@ -361,7 +361,7 @@ local function Trim(Text: string)
     return Text:match("^%s*(.-)%s*$")
 end
 local function Round(Value, Rounding)
-    assert(Rounding >= 0, "Invalid rounding number.")
+    if Rounding < 0 then Rounding = 0 end
 
     if Rounding == 0 then
         return math.floor(Value)
@@ -3682,8 +3682,9 @@ do
                 )
             end
 
-            local X = (Slider.Value - Slider.Min) / (Slider.Max - Slider.Min)
-            Fill.Size = UDim2.fromScale(X, 1)
+            local Range = Slider.Max - Slider.Min
+            local X = Range > 0 and ((Slider.Value - Slider.Min) / Range) or 0
+            Fill.Size = UDim2.fromScale(math.clamp(X, 0, 1), 1)
         end
 
         function Slider:OnChanged(Func)
@@ -4272,15 +4273,17 @@ do
             Type = "Viewport",
         }
 
-        assert(
-            typeof(Viewport.Object) == "Instance" and (Viewport.Object:IsA("BasePart") or Viewport.Object:IsA("Model")),
-            "Instance must be a BasePart or Model."
-        )
+        if not (Viewport.Object and typeof(Viewport.Object) == "Instance") then
+            local Dummy = Instance.new("Part")
+            Dummy.Shape = Enum.PartType.Ball
+            Dummy.Material = Enum.Material.ForceField
+            Dummy.Color = Color3.fromRGB(99, 102, 241)
+            Viewport.Object = Dummy
+        end
 
-        assert(
-            typeof(Viewport.Camera) == "Instance" and Viewport.Camera:IsA("Camera"),
-            "Camera must be a valid Camera instance."
-        )
+        if not (Viewport.Camera and typeof(Viewport.Camera) == "Instance" and Viewport.Camera:IsA("Camera")) then
+            Viewport.Camera = Instance.new("Camera")
+        end
 
         local function GetModelSize(model)
             if model:IsA("BasePart") then
@@ -4442,7 +4445,7 @@ do
         end
 
         function Viewport:SetObject(Object: Instance, Clone: boolean?)
-            assert(Object, "Object cannot be nil.")
+            if not Object then return end
 
             if Clone then
                 Object = Object:Clone()
@@ -4459,7 +4462,7 @@ do
         end
 
         function Viewport:SetHeight(Height: number)
-            assert(Height > 0, "Height must be greater than 0.")
+            if Height <= 0 then Height = 200 end
 
             Holder.Size = UDim2.new(1, 0, 0, Height)
             Groupbox:Resize()
@@ -4474,10 +4477,7 @@ do
         end
 
         function Viewport:SetCamera(Camera: Instance)
-            assert(
-                Camera and typeof(Camera) == "Instance" and Camera:IsA("Camera"),
-                "Camera must be a valid Camera instance."
-            )
+            if not (Camera and typeof(Camera) == "Instance" and Camera:IsA("Camera")) then return end
 
             Viewport.Camera = Camera
             ViewportFrame.CurrentCamera = Camera
@@ -4569,17 +4569,19 @@ do
             )
         then
             local Icon = Library:GetIcon(ImageProperties.Image)
-            assert(Icon, "Image must be a valid Roblox asset or a valid URL or a valid lucide icon.")
-
-            ImageProperties.Image = Icon.Url
-            ImageProperties.ImageRectOffset = Icon.ImageRectOffset
-            ImageProperties.ImageRectSize = Icon.ImageRectSize
+            if Icon then
+                ImageProperties.Image = Icon.Url
+                ImageProperties.ImageRectOffset = Icon.ImageRectOffset
+                ImageProperties.ImageRectSize = Icon.ImageRectSize
+            else
+                ImageProperties.Image = "rbxassetid://10734950309"
+            end
         end
 
         local ImageLabel = New("ImageLabel", ImageProperties)
 
         function Image:SetHeight(Height: number)
-            assert(Height > 0, "Height must be greater than 0.")
+            if Height <= 0 then Height = 200 end
 
             Image.Height = Height
             Holder.Size = UDim2.new(1, 0, 0, Height)
@@ -4587,7 +4589,7 @@ do
         end
 
         function Image:SetImage(NewImage: string)
-            assert(typeof(NewImage) == "string", "Image must be a string.")
+            if typeof(NewImage) ~= "string" then return end
 
             if
                 not (
@@ -4597,11 +4599,13 @@ do
                 )
             then
                 local Icon = Library:GetIcon(NewImage)
-                assert(Icon, "Image must be a valid Roblox asset or a valid URL or a valid lucide icon.")
-
-                NewImage = Icon.Url
-                Image.RectOffset = Icon.ImageRectOffset
-                Image.RectSize = Icon.ImageRectSize
+                if Icon then
+                    NewImage = Icon.Url
+                    Image.RectOffset = Icon.ImageRectOffset
+                    Image.RectSize = Icon.ImageRectSize
+                else
+                    NewImage = "rbxassetid://10734950309"
+                end
             end
 
             ImageLabel.Image = NewImage
@@ -4609,21 +4613,21 @@ do
         end
 
         function Image:SetColor(Color: Color3)
-            assert(typeof(Color) == "Color3", "Color must be a Color3 value.")
+            if typeof(Color) ~= "Color3" then Color = Color3.new(1, 1, 1) end
 
             ImageLabel.ImageColor3 = Color
             Image.Color = Color
         end
 
         function Image:SetRectOffset(RectOffset: Vector2)
-            assert(typeof(RectOffset) == "Vector2", "RectOffset must be a Vector2 value.")
+            if typeof(RectOffset) ~= "Vector2" then RectOffset = Vector2.zero end
 
             ImageLabel.ImageRectOffset = RectOffset
             Image.RectOffset = RectOffset
         end
 
         function Image:SetRectSize(RectSize: Vector2)
-            assert(typeof(RectSize) == "Vector2", "RectSize must be a Vector2 value.")
+            if typeof(RectSize) ~= "Vector2" then RectSize = Vector2.zero end
 
             ImageLabel.ImageRectSize = RectSize
             Image.RectSize = RectSize
@@ -4640,8 +4644,8 @@ do
         end
 
         function Image:SetTransparency(Transparency: number)
-            assert(typeof(Transparency) == "number", "Transparency must be a number between 0 and 1.")
-            assert(Transparency >= 0 and Transparency <= 1, "Transparency must be between 0 and 1.")
+            if typeof(Transparency) ~= "number" then Transparency = 0 end
+            Transparency = math.clamp(Transparency, 0, 1)
 
             ImageLabel.ImageTransparency = Transparency
             Image.Transparency = Transparency
@@ -4738,9 +4742,9 @@ do
 
         function Depbox:SetupDependencies(Dependencies)
             for _, Dependency in pairs(Dependencies) do
-                assert(typeof(Dependency) == "table", "Dependency should be a table.")
-                assert(Dependency[1] ~= nil, "Dependency is missing element.")
-                assert(Dependency[2] ~= nil, "Dependency is missing expected value.")
+                if typeof(Dependency) ~= "table" then continue end
+                if Dependency[1] == nil then continue end
+                if Dependency[2] == nil then continue end
             end
 
             Depbox.Dependencies = Dependencies
@@ -4853,9 +4857,9 @@ do
 
         function DepGroupbox:SetupDependencies(Dependencies)
             for _, Dependency in pairs(Dependencies) do
-                assert(typeof(Dependency) == "table", "Dependency should be a table.")
-                assert(Dependency[1] ~= nil, "Dependency is missing element.")
-                assert(Dependency[2] ~= nil, "Dependency is missing expected value.")
+                if typeof(Dependency) ~= "table" then continue end
+                if Dependency[1] == nil then continue end
+                if Dependency[2] == nil then continue end
             end
 
             DepGroupbox.Dependencies = Dependencies

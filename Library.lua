@@ -5273,40 +5273,6 @@ function Library:CreateWindow(WindowInfo)
             Parent = RightWrapper,
         })
 
-        CurrentTabInfo = New("Frame", {
-            Size = UDim2.fromScale(WindowInfo.DisableSearch and 1 or 0.45, 1),
-            Visible = false,
-            BackgroundTransparency = 1,
-            Parent = RightWrapper,
-        })
-        New("UIListLayout", {
-            FillDirection = Enum.FillDirection.Vertical,
-            HorizontalAlignment = Enum.HorizontalAlignment.Right,
-            VerticalAlignment = Enum.VerticalAlignment.Center,
-            Parent = CurrentTabInfo,
-        })
-        CurrentTabLabel = New("TextLabel", {
-            BackgroundTransparency = 1,
-            Size = UDim2.fromScale(1, 0),
-            AutomaticSize = Enum.AutomaticSize.Y,
-            Text = "",
-            TextSize = 14,
-            FontFace = Font.fromEnum(Enum.Font.GothamBold),
-            TextXAlignment = Enum.TextXAlignment.Right,
-            Parent = CurrentTabInfo,
-        })
-        CurrentTabDescription = New("TextLabel", {
-            BackgroundTransparency = 1,
-            Size = UDim2.fromScale(1, 0),
-            AutomaticSize = Enum.AutomaticSize.Y,
-            Text = "",
-            TextWrapped = true,
-            TextSize = 11,
-            TextXAlignment = Enum.TextXAlignment.Right,
-            TextTransparency = 0.5,
-            Parent = CurrentTabInfo,
-        })
-
         SearchBox = New("TextBox", {
             BackgroundColor3 = "BackgroundColor",
             PlaceholderText = "Search...",
@@ -5376,13 +5342,78 @@ function Library:CreateWindow(WindowInfo)
             Parent = Tabs,
         })
 
+        -- Островок 3: Общая большая красивая скруглённая рамка контента ("Menu")
         Container = New("Frame", {
             AnchorPoint = Vector2.new(0, 0),
-            BackgroundTransparency = 1,
+            BackgroundColor3 = "BackgroundColor", -- Нежный серо-голубой фон общей рамки
+            BackgroundTransparency = 0,           -- Полностью видимая красивая панель!
             Name = "Container",
             Position = UDim2.new(0.26, 12, 0, 58),
             Size = UDim2.new(0.74, -12, 1, -84),
             Parent = MainFrame,
+        })
+        New("UICorner", { CornerRadius = UDim.new(0, WindowInfo.CornerRadius + 2), Parent = Container })
+        New("UIStroke", { Color = "OutlineColor", Thickness = 1, Parent = Container })
+
+        -- Заголовок активной вкладки внутри общей рамки (в самом верху)
+        local ContentHeader = New("Frame", {
+            BackgroundTransparency = 1,
+            Position = UDim2.new(0, 16, 0, 10),
+            Size = UDim2.new(1, -32, 0, 40),
+            Parent = Container,
+        })
+
+        CurrentTabInfo = New("Frame", {
+            BackgroundTransparency = 1,
+            Size = UDim2.fromScale(1, 1),
+            Visible = false,
+            Parent = ContentHeader,
+        })
+        New("UIListLayout", {
+            FillDirection = Enum.FillDirection.Vertical,
+            HorizontalAlignment = Enum.HorizontalAlignment.Left,
+            VerticalAlignment = Enum.VerticalAlignment.Center,
+            Padding = UDim.new(0, 2),
+            Parent = CurrentTabInfo,
+        })
+        CurrentTabLabel = New("TextLabel", {
+            BackgroundTransparency = 1,
+            Size = UDim2.fromScale(1, 0),
+            AutomaticSize = Enum.AutomaticSize.Y,
+            Text = "",
+            TextSize = 18,
+            FontFace = Font.fromEnum(Enum.Font.GothamBold),
+            TextColor3 = "AccentColor",
+            TextXAlignment = Enum.TextXAlignment.Left,
+            Parent = CurrentTabInfo,
+        })
+        CurrentTabDescription = New("TextLabel", {
+            BackgroundTransparency = 1,
+            Size = UDim2.fromScale(1, 0),
+            AutomaticSize = Enum.AutomaticSize.Y,
+            Text = "",
+            TextWrapped = true,
+            TextSize = 12,
+            FontFace = Font.fromEnum(Enum.Font.Gotham),
+            TextXAlignment = Enum.TextXAlignment.Left,
+            TextTransparency = 0.5,
+            Parent = CurrentTabInfo,
+        })
+
+        -- Разделительная линия под заголовком
+        local HeaderLine = New("Frame", {
+            BackgroundColor3 = "OutlineColor",
+            Position = UDim2.new(0, 16, 0, 52),
+            Size = UDim2.new(1, -32, 0, 1),
+            Parent = Container,
+        })
+
+        -- Контейнер для дочерних вкладок (ContentArea)
+        local ContentArea = New("Frame", {
+            BackgroundTransparency = 1,
+            Position = UDim2.new(0, 10, 0, 60),
+            Size = UDim2.new(1, -20, 1, -70),
+            Parent = Container,
         })
 
         local BottomBar = New("Frame", {
@@ -5512,7 +5543,7 @@ function Library:CreateWindow(WindowInfo)
                 BackgroundTransparency = 1,
                 Size = UDim2.fromScale(1, 1),
                 Visible = false,
-                Parent = Container,
+                Parent = ContentArea,
             })
 
             TabLeft = New("ScrollingFrame", {
@@ -6137,7 +6168,7 @@ function Library:CreateWindow(WindowInfo)
                 ScrollBarThickness = 0,
                 Size = UDim2.fromScale(1, 1),
                 Visible = false,
-                Parent = Container,
+                Parent = ContentArea,
             })
             New("UIListLayout", {
                 HorizontalAlignment = Enum.HorizontalAlignment.Center,

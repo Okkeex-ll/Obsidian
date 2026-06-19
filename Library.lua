@@ -314,8 +314,13 @@ local function FillInstance(Table, Instance)
     local DPIOffset = DPIProperties["DPIOffset"] or Table["DPIOffset"] or {}
     for k, v in pairs(Table) do
         if k == "DPIExclude" or k == "DPIOffset" then continue
-        elseif ThemeProperties[k] then ThemeProperties[k] = nil
-        elseif k ~= "Text" and (Library.Scheme[v] or typeof(v) == "function") then ThemeProperties[k] = v Instance[k] = Library.Scheme[v] or v() continue end
+        elseif ThemeProperties[k] then ThemeProperties[k] = nil end
+        
+        if k ~= "Text" and (Library.Scheme[v] or typeof(v) == "function") then 
+            ThemeProperties[k] = v 
+            Instance[k] = Library.Scheme[v] or v() 
+            continue 
+        end
         if not DPIExclude[k] then
             if k == "Position" or k == "Size" or k:match("Padding") then DPIProperties[k] = v v = ApplyDPIScale(v, DPIOffset[k])
             elseif k == "TextSize" then DPIProperties[k] = v v = ApplyTextScale(v) end
@@ -468,22 +473,23 @@ end
 
 --// UI Watermark \--
 do
-    local WatermarkBackground = Library:MakeOutline(ScreenGui, Library.CornerRadius, 10)
-    WatermarkBackground.AutomaticSize = Enum.AutomaticSize.XY
-    WatermarkBackground.Position = UDim2.fromOffset(12, 12)
-    WatermarkBackground.Visible = false
-    Library:UpdateDPI(WatermarkBackground, { Position = false, Size = false })
+    local WatermarkHolder = New("Frame", {
+        BackgroundColor3 = "BackgroundColor",
+        Position = UDim2.fromOffset(12, 12),
+        AutomaticSize = Enum.AutomaticSize.XY,
+        Visible = false,
+        Parent = ScreenGui
+    })
+    New("UICorner", { CornerRadius = UDim.new(0, Library.CornerRadius), Parent = WatermarkHolder })
+    New("UIStroke", { Color = "OutlineColor", Parent = WatermarkHolder })
 
-    local WatermarkHolder = New("Frame", { BackgroundColor3 = "BackgroundColor", Position = UDim2.fromOffset(2, 2), Size = UDim2.new(1, -4, 1, -4), Parent = WatermarkBackground })
-    New("UICorner", { CornerRadius = UDim.new(0, Library.CornerRadius - 1), Parent = WatermarkHolder })
-    
     local WatermarkLayout = New("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, VerticalAlignment = Enum.VerticalAlignment.Center, Padding = UDim.new(0, 6), Parent = WatermarkHolder })
     New("UIPadding", { PaddingLeft = UDim.new(0, 8), PaddingRight = UDim.new(0, 8), PaddingTop = UDim.new(0, 4), PaddingBottom = UDim.new(0, 4), Parent = WatermarkHolder })
 
     local WatermarkIcon = New("ImageLabel", { BackgroundTransparency = 1, Size = UDim2.fromOffset(16, 16), Visible = false, Parent = WatermarkHolder })
     local WatermarkLabel = New("TextLabel", { BackgroundTransparency = 1, AutomaticSize = Enum.AutomaticSize.XY, Text = "", TextSize = 14, Parent = WatermarkHolder })
 
-    Library:MakeDraggable(WatermarkBackground, WatermarkHolder, true)
+    Library:MakeDraggable(WatermarkHolder, WatermarkHolder, true)
 
     local WatermarkConfig = { Enabled = false, Title = "OS Framework", Icon = nil, ShowFPS = false, ShowPing = false, ShowTime = false }
     local LastFPS, LastPing = 0, 0
@@ -511,7 +517,7 @@ do
             if iconData then WatermarkIcon.Image = iconData.Url WatermarkIcon.ImageRectOffset = iconData.ImageRectOffset WatermarkIcon.ImageRectSize = iconData.ImageRectSize else WatermarkIcon.Image = WatermarkConfig.Icon end
             WatermarkIcon.Visible = true
         else WatermarkIcon.Visible = false end
-        WatermarkBackground.Visible = WatermarkConfig.Enabled
+        WatermarkHolder.Visible = WatermarkConfig.Enabled
     end
 
     function Library:SetWatermark(config)
@@ -786,9 +792,20 @@ do
     end
     function Funcs:AddSettings()
         local ParentObj = self
-        local ToggleLabel = ParentObj.TextLabel
+        local ToggleLabel = ParentObj.TextLabel or ParentObj.Holder
+        if not ToggleLabel then return end
         
-        local SettingsGear = New("ImageButton", { BackgroundTransparency = 1, Size = UDim2.fromOffset(16, 16), Image = Library:GetIcon("settings").Url, ImageRectOffset = Library:GetIcon("settings").ImageRectOffset, ImageRectSize = Library:GetIcon("settings").ImageRectSize, ImageColor3 = "FontColor", ImageTransparency = 0.5, Parent = ToggleLabel })
+        local SettingsGear = New("ImageButton", { 
+            BackgroundTransparency = 1, 
+            Size = UDim2.fromOffset(14, 14), 
+            Image = Library:GetIcon("settings").Url, 
+            ImageRectOffset = Library:GetIcon("settings").ImageRectOffset, 
+            ImageRectSize = Library:GetIcon("settings").ImageRectSize, 
+            ImageColor3 = "FontColor", 
+            ImageTransparency = 0.5, 
+            LayoutOrder = -1,
+            Parent = ToggleLabel 
+        })
         SettingsGear.MouseEnter:Connect(function() SettingsGear.ImageTransparency = 0 end)
         SettingsGear.MouseLeave:Connect(function() SettingsGear.ImageTransparency = 0.5 end)
         
@@ -1309,22 +1326,19 @@ function Library:CreateWindow(WindowInfo)
         end
 
         if WindowInfo.NewUI then
-            -- Make TopBar a detached frame
-            TopBar.Parent = ScreenGui
-            TopBar.BackgroundColor3 = Library.Scheme.BackgroundColor
-            TopBar.Position = UDim2.new(0, MainFrame.Position.X.Offset, 0, MainFrame.Position.Y.Offset - 60)
+            -- TopBar styling inside MainFrame but floating above!
+            TopBar.BackgroundColor3 = "BackgroundColor"
+            TopBar.BackgroundTransparency = 0
+            TopBar.Position = UDim2.new(0, -162, 0, -58)
+            TopBar.Size = UDim2.new(1, 162, 0, 48)
             Library:MakeOutline(TopBar, WindowInfo.CornerRadius, 0)
             New("UICorner", { CornerRadius = UDim.new(0, WindowInfo.CornerRadius - 1), Parent = TopBar })
             
-            -- Sync dragging
-            Library:MakeDraggable(MainFrame, TopBar, false, true)
-            Library:MakeDraggable(MainFrame, MainFrame, false, true)
+            TitleHolder.Position = UDim2.fromOffset(12, 0)
+            RightWrapper.Position = UDim2.new(1, -8, 0.5, 0)
+            RightWrapper.AnchorPoint = Vector2.new(1, 0.5)
             
-            MainFrame:GetPropertyChangedSignal("Position"):Connect(function()
-                TopBar.Position = UDim2.new(0, MainFrame.Position.X.Offset, 0, MainFrame.Position.Y.Offset - 60)
-            end)
-            
-            local SidebarPanel = New("Frame", { BackgroundColor3 = "BackgroundColor", Position = UDim2.new(0, -162, 0, 0), Size = UDim2.new(0, 150, 1, 0), Parent = MainFrame })
+            local SidebarPanel = New("Frame", { BackgroundColor3 = "BackgroundColor", Position = UDim2.new(0, -160, 0, 0), Size = UDim2.new(0, 150, 1, 0), Parent = MainFrame })
             Library:MakeOutline(SidebarPanel, WindowInfo.CornerRadius, 0)
             New("UICorner", { CornerRadius = UDim.new(0, WindowInfo.CornerRadius - 1), Parent = SidebarPanel })
 
@@ -1332,20 +1346,21 @@ function Library:CreateWindow(WindowInfo)
             New("UIListLayout", { Padding = UDim.new(0, 4), Parent = Tabs })
             New("UIPadding", { PaddingBottom = UDim.new(0, 6), PaddingLeft = UDim.new(0, 6), PaddingRight = UDim.new(0, 6), PaddingTop = UDim.new(0, 6), Parent = Tabs })
 
-            Library.RightPanel = New("Frame", { BackgroundColor3 = "BackgroundColor", Position = UDim2.new(1, 12, 0, 0), Size = UDim2.new(0, 200, 1, 0), Visible = false, Parent = MainFrame })
+            Library.RightPanel = New("Frame", { BackgroundColor3 = "BackgroundColor", Position = UDim2.new(1, 10, 0, -50), Size = UDim2.new(0, 200, 1, 50), Visible = false, Parent = MainFrame })
             Library:MakeOutline(Library.RightPanel, WindowInfo.CornerRadius, 0)
             New("UICorner", { CornerRadius = UDim.new(0, WindowInfo.CornerRadius - 1), Parent = Library.RightPanel })
 
-            Library.RightPanelLabel = New("TextLabel", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 34), Text = "Settings", TextSize = 14, TextXAlignment = Enum.TextXAlignment.Left, Parent = Library.RightPanel })
+            Library.RightPanelLabel = New("TextLabel", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 40), Text = "Settings", TextSize = 14, TextXAlignment = Enum.TextXAlignment.Left, Parent = Library.RightPanel })
             New("UIPadding", { PaddingLeft = UDim.new(0, 12), Parent = Library.RightPanelLabel })
-            Library:MakeLine(Library.RightPanel, { Position = UDim2.fromOffset(0, 34), Size = UDim2.new(1, 0, 0, 1) })
+            Library:MakeLine(Library.RightPanel, { Position = UDim2.fromOffset(0, 40), Size = UDim2.new(1, 0, 0, 1) })
 
-            Library.RightPanelContainer = New("ScrollingFrame", { BackgroundTransparency = 1, Position = UDim2.new(0, 0, 0, 35), Size = UDim2.new(1, 0, 1, -35), ScrollBarThickness = 0, AutomaticCanvasSize = Enum.AutomaticSize.Y, CanvasSize = UDim2.fromScale(0, 0), Parent = Library.RightPanel })
+            Library.RightPanelContainer = New("ScrollingFrame", { BackgroundTransparency = 1, Position = UDim2.new(0, 0, 0, 41), Size = UDim2.new(1, 0, 1, -41), ScrollBarThickness = 0, AutomaticCanvasSize = Enum.AutomaticSize.Y, CanvasSize = UDim2.fromScale(0, 0), Parent = Library.RightPanel })
             
-            Container = New("Frame", { AnchorPoint = Vector2.new(1, 0), BackgroundTransparency = 1, Name = "Container", Position = UDim2.new(1, 0, 0, 0), Size = UDim2.new(1, 0, 1, -20), Parent = MainFrame })
-            New("UIPadding", { PaddingLeft = UDim.new(0, 6), PaddingRight = UDim.new(0, 6), PaddingTop = UDim.new(0, 6), Parent = Container })
+            Container = New("Frame", { AnchorPoint = Vector2.new(0, 0), BackgroundTransparency = 1, Name = "Container", Position = UDim2.new(0, 0, 0, 0), Size = UDim2.new(1, 0, 1, 0), Parent = MainFrame })
+            New("UIPadding", { PaddingLeft = UDim.new(0, 6), PaddingRight = UDim.new(0, 6), PaddingTop = UDim.new(0, 6), PaddingBottom = UDim.new(0, 6), Parent = Container })
+            
+            BottomBar.Visible = false
         else
-            -- Old Layout
             Library:MakeLine(MainFrame, { Position = UDim2.fromOffset(0, 48), Size = UDim2.new(1, 0, 0, 1) })
             Library:MakeLine(MainFrame, { Position = UDim2.fromScale(0.3, 0), Size = UDim2.new(0, 1, 1, -21) })
             Library:MakeLine(MainFrame, { AnchorPoint = Vector2.new(0, 1), Position = UDim2.new(0, 0, 1, -20), Size = UDim2.new(1, 0, 0, 1) })

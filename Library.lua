@@ -314,8 +314,13 @@ local function FillInstance(Table, Instance)
     local DPIOffset = DPIProperties["DPIOffset"] or Table["DPIOffset"] or {}
     for k, v in pairs(Table) do
         if k == "DPIExclude" or k == "DPIOffset" then continue
-        elseif ThemeProperties[k] then ThemeProperties[k] = nil
-        elseif k ~= "Text" and (Library.Scheme[v] or typeof(v) == "function") then ThemeProperties[k] = v Instance[k] = Library.Scheme[v] or v() continue end
+        elseif ThemeProperties[k] then ThemeProperties[k] = nil end
+        
+        if k ~= "Text" and (Library.Scheme[v] or typeof(v) == "function") then 
+            ThemeProperties[k] = v 
+            Instance[k] = Library.Scheme[v] or v() 
+            continue 
+        end
         if not DPIExclude[k] then
             if k == "Position" or k == "Size" or k:match("Padding") then DPIProperties[k] = v v = ApplyDPIScale(v, DPIOffset[k])
             elseif k == "TextSize" then DPIProperties[k] = v v = ApplyTextScale(v) end

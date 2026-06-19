@@ -5102,7 +5102,7 @@ function Library:Notify(...)
     if Data.SoundId then
         local SoundId = Data.SoundId
         if typeof(SoundId) == "number" then
-            SoundId = `rbxassetid://{SoundId}`
+            SoundId = "rbxassetid://" .. tostring(SoundId)
         end
 
         New("Sound", {
@@ -5236,7 +5236,7 @@ function Library:CreateWindow(WindowInfo)
 
         if WindowInfo.Icon then
             New("ImageLabel", {
-                Image = if tonumber(WindowInfo.Icon) then `rbxassetid://{WindowInfo.Icon}` else WindowInfo.Icon,
+                Image = tonumber(WindowInfo.Icon) and ("rbxassetid://" .. tostring(WindowInfo.Icon)) or WindowInfo.Icon,
                 Size = WindowInfo.IconSize,
                 Parent = TitleHolder,
             })

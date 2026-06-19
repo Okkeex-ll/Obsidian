@@ -1327,7 +1327,7 @@ function Library:CreateWindow(WindowInfo)
 
         if WindowInfo.NewUI then
             -- TopBar styling inside MainFrame but floating above!
-            TopBar.BackgroundColor3 = "BackgroundColor"
+            TopBar.BackgroundColor3 = Library.Scheme.BackgroundColor; Library.Registry[TopBar] = { BackgroundColor3 = "BackgroundColor" }
             TopBar.BackgroundTransparency = 0
             TopBar.Position = UDim2.new(0, -162, 0, -58)
             TopBar.Size = UDim2.new(1, 162, 0, 48)
